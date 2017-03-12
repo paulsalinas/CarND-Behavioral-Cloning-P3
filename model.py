@@ -5,6 +5,8 @@ from keras.models import Sequential
 from keras.layers import Flatten, Dense, Lambda
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
+from keras.models import Model
+import matplotlib.pyplot as plt
 
 root_path = './data/bend_1'
 csv_path = root_path + '/driving_log.csv'
@@ -48,6 +50,18 @@ model.add(Dense(84))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
-model.fit(X_train, y_train, validation_split=0.2, shuffle=True)
+history_object = model.fit(X_train, y_train, nb_epoch=5, validation_split=0.2, shuffle=True)
+
+### print the keys contained in the history object
+print(history_object.history.keys())
+
+### plot the training and validation loss for each epoch
+plt.plot(history_object.history['loss'])
+plt.plot(history_object.history['val_loss'])
+plt.title('model mean squared error loss')
+plt.ylabel('mean squared error loss')
+plt.xlabel('epoch')
+plt.legend(['training set', 'validation set'], loc='upper right')
+plt.show()
 
 model.save('model.h5')
