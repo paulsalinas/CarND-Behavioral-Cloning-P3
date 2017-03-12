@@ -2,6 +2,7 @@ import csv
 import cv2
 import sklearn
 import numpy as np
+import matplotlib.image as mpimg
 
 def get_samples(path):
     """get samples from a csv file"""
@@ -15,6 +16,9 @@ def get_samples(path):
             samples.append(line)
 
     return samples
+
+def get_sample_image(root_path, samples):
+    return cv2.imread(root_path + '/IMG/' + samples[0][0].split('/')[-1])
 
 def get_image_steering(root_path):
     """
@@ -36,7 +40,7 @@ def get_image_steering(root_path):
 
     return images, measurements
 
-def generator(root_path, samples, batch_size=32):
+def generator(root_path, samples, batch_size=32, aug_image_fn=lambda x: x, aug_measurement_fn=lambda x: x):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
         sklearn.utils.shuffle(samples)
@@ -49,11 +53,12 @@ def generator(root_path, samples, batch_size=32):
                 name = root_path + '/IMG/'+batch_sample[0].split('/')[-1]
                 center_image = cv2.imread(name)
                 center_angle = float(batch_sample[3])
-                images.append(center_image)
-                angles.append(center_angle)
+                images.append(aug_image_fn(center_image))
+                angles.append(aug_measurement_fn(center_angle))
 
             # trim image to only see section with road
             X_train = np.array(images)
             y_train = np.array(angles)
+
             yield sklearn.utils.shuffle(X_train, y_train)
             
