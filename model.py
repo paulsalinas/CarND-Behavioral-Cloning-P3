@@ -1,41 +1,24 @@
-import csv
-import cv2
-import numpy as np
-from keras.models import Sequential
-from keras.layers import Flatten, Dense, Lambda
+import matplotlib.pyplot as plt
+from keras.layers import Dense, Flatten, Lambda
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
-from keras.models import Model
-import matplotlib.pyplot as plt
+from keras.models import Model, Sequential
+from sklearn.model_selection import train_test_split
+
+from utils import generator, get_samples
 
 root_path = './data/bend_1'
-csv_path = root_path + '/driving_log.csv'
-lines = []
 
-with open(csv_path) as csvfile:
-    reader = csv.reader(csvfile)
-    for line in reader:
-        lines.append(line)
+train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
 
-images = []
-measurements = []
-for line in lines:
-    source_path = line[0]
-    steering_value = line[3]
-    filename = source_path.split('/')[-1]
-    current_path = root_path + '/IMG/' + filename
-    image = cv2.imread(current_path)
-    images.append(image)
-    measurements.append(steering_value)
-
-X_train = np.array(images)
-y_train = np.array(measurements)
+train_generator = generator(root_path, train_samples, batch_size=32)
+validation_generator = generator(root_path, validation_samples, batch_size=32)
 
 normalize = lambda x: x / 255 - 0.5
 
 model = Sequential()
 
-model.add(Lambda(normalize, input_shape=(160, 320,3)))
+model.add(Lambda(normalize, input_shape=(160, 320, 3)))
 
 model.add(Convolution2D(6, 5, 5, activation='relu'))
 model.add(MaxPooling2D())
@@ -50,7 +33,13 @@ model.add(Dense(84))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
-history_object = model.fit(X_train, y_train, nb_epoch=5, validation_split=0.2, shuffle=True)
+
+history_object = model.fit_generator(
+    train_generator, 
+    samples_per_epoch=len(train_samples), 
+    validation_data=validation_generator, 
+    nb_val_samples=len(validation_samples), 
+    nb_epoch=3)
 
 ### print the keys contained in the history object
 print(history_object.history.keys())
