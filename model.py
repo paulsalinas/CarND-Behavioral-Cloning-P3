@@ -1,6 +1,10 @@
-import cv2
 import csv
+import cv2
 import numpy as np
+from keras.models import Sequential
+from keras.layers import Flatten, Dense, Lambda
+from keras.layers.convolutional import Convolution2D
+from keras.layers.pooling import MaxPooling2D
 
 root_path = './data/bend_1'
 csv_path = root_path + '/driving_log.csv'
@@ -25,13 +29,22 @@ for line in lines:
 X_train = np.array(images)
 y_train = np.array(measurements)
 
-print(X_train[0].shape)
-
-from keras.models import Sequential
-from keras.layers import Flatten, Dense
+normalize = lambda x: x / 255 - 0.5
 
 model = Sequential()
-model.add(Flatten(input_shape=(160, 320,3)))
+
+model.add(Lambda(normalize, input_shape=(160, 320,3)))
+
+model.add(Convolution2D(6, 5, 5, activation='relu'))
+model.add(MaxPooling2D())
+
+model.add(Convolution2D(6, 5, 5, activation='relu'))
+model.add(MaxPooling2D())
+
+model.add(Flatten())
+
+model.add(Dense(120))
+model.add(Dense(84))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
