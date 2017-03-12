@@ -50,11 +50,24 @@ def generator(root_path, samples, batch_size=32, aug_image_fn=lambda x: x, aug_m
             images = []
             angles = []
             for batch_sample in batch_samples:
-                name = root_path + '/IMG/'+batch_sample[0].split('/')[-1]
-                center_image = cv2.imread(name)
+
+                filename_by_col = lambda col: root_path + '/IMG/' + batch_sample[col].split('/')[-1]
+                
+                center_image = cv2.imread(filename_by_col(0))
                 center_angle = float(batch_sample[3])
-                images.append(aug_image_fn(center_image))
-                angles.append(aug_measurement_fn(center_angle))
+                
+                # steering factor applied to side cameras 
+                steering_correction = 0.25
+
+                left_image = cv2.imread(filename_by_col(1))
+                left_angle = float(batch_sample[3]) + steering_correction
+                
+                right_image = cv2.imread(filename_by_col(2))
+                right_angle = float(batch_sample[3]) - steering_correction
+
+                for image, angle in zip([center_image, left_image, right_image], [center_angle, left_angle, right_angle]):
+                    images.append(aug_image_fn(image))
+                    angles.append(aug_measurement_fn(angle))
 
             X_train = np.array(images)
             y_train = np.array(angles)
