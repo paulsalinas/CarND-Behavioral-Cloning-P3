@@ -56,7 +56,6 @@ def generator(root_path, samples, batch_size=32, aug_image_fn=lambda x: x, aug_m
                 images.append(aug_image_fn(center_image))
                 angles.append(aug_measurement_fn(center_angle))
 
-            # trim image to only see section with road
             X_train = np.array(images)
             y_train = np.array(angles)
 
