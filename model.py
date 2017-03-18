@@ -10,40 +10,48 @@ import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
 
-from utils import generator, get_samples, get_sample_image
+from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images
 
 root_path = './data/bend_1'
 
 train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
 
-# plt.imshow(get_sample_image(root_path, train_samples))
-# plt.show()
+# visual of augmentations
+sample_image = get_sample_image(root_path, train_samples) 
+plt.imshow(sample_image)
+plt.savefig('sample');
 
-# plt.imshow(np.fliplr(get_sample_image(root_path, train_samples)))
-# plt.show()
+plt.imshow(augment_brightness_camera_images(sample_image))
+plt.savefig('augmented');
 
-train_generator = generator(
+plt.imshow(np.fliplr(sample_image))
+plt.savefig('flipped');
+
+train_generator = generator(root_path, train_samples) 
+validation_generator = generator(root_path, validation_samples) 
+
+# helper to create a vertically flipped image generator for a given sample set
+flip_gen = lambda samples_to_flip: generator(
     root_path, 
-    train_samples) 
-
-validation_generator = generator(
-    root_path, 
-    validation_samples) 
-
-flipped_train_generator = generator(
-    root_path, 
-    train_samples, 
+    samples_to_flip, 
     aug_image_fn=lambda x: np.fliplr(x),
     aug_measurement_fn=lambda x: x * -1)
 
-flipped_validation_generator = generator(
+shadow_gen = lambda samples_to_shadow: generator(
     root_path, 
-    validation_samples, 
-    aug_image_fn=lambda x: np.fliplr(x),
-    aug_measurement_fn=lambda x: x * -1)
+    samples_to_shadow, 
+    aug_image_fn=lambda x: augment_brightness_camera_images(x))
 
-train_generator = chain(train_generator, flipped_train_generator)
-validation_generator = chain(validation_generator, flipped_validation_generator)
+# combine generators 
+train_generator = chain(
+    train_generator, 
+    flip_gen(train_samples), 
+    shadow_gen(train_samples))
+
+validation_generator = chain(
+    validation_generator, 
+    flip_gen(validation_samples), 
+    shadow_gen(validation_samples))
 
 # image normalization function
 normalize = lambda x: x / 255 - 0.5

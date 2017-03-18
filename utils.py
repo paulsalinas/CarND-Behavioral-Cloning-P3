@@ -40,6 +40,7 @@ def get_image_steering(root_path):
 
     return images, measurements
 
+# the generator will also use the left and right camera images and apply a steering factor
 def generator(root_path, samples, batch_size=32, aug_image_fn=lambda x: x, aug_measurement_fn=lambda x: x):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
@@ -73,4 +74,17 @@ def generator(root_path, samples, batch_size=32, aug_image_fn=lambda x: x, aug_m
             y_train = np.array(angles)
 
             yield sklearn.utils.shuffle(X_train, y_train)
-            
+
+
+# courtesy of: 
+# https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.bi5td84fk
+# will add shadows to the image
+def augment_brightness_camera_images(image):
+    image1 = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
+    image1 = np.array(image1, dtype = np.float64)
+    random_bright = .5 + np.random.uniform()
+    image1[:,:,2] = image1[:,:,2] * random_bright
+    image1[:,:,2][image1[:,:,2]>255]  = 255
+    image1 = np.array(image1, dtype = np.uint8)
+    image1 = cv2.cvtColor(image1,cv2.COLOR_HSV2RGB)
+    return image1
