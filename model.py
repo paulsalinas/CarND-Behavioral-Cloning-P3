@@ -9,8 +9,9 @@ from itertools import chain
 import matplotlib
 matplotlib.use('agg')
 import matplotlib.pyplot as plt
+from functools import reduce
 
-from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images
+from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images, split_camera_angles, trans_image
 
 root_path = './data/bend_1'
 
@@ -27,31 +28,60 @@ plt.savefig('augmented');
 plt.imshow(np.fliplr(sample_image))
 plt.savefig('flipped');
 
-train_generator = generator(root_path, train_samples) 
-validation_generator = generator(root_path, validation_samples) 
+sample_translated, steering = trans_image(sample_image, 0, 100)
+plt.imshow(sample_translated)
+plt.savefig('flipped');
 
-# helper to create a vertically flipped image generator for a given sample set
+train_center, train_left, train_right = split_camera_angles(train_samples, 0.25)
+valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 0.25)
+
+# train_generator = generator(root_path, train_samples) 
+# validation_generator = generator(root_path, validation_samples) 
+
+# generator funcs for each type of augmentation
 flip_gen = lambda samples_to_flip: generator(
     root_path, 
     samples_to_flip, 
-    aug_image_fn=lambda x: np.fliplr(x),
-    aug_measurement_fn=lambda x: x * -1)
+    aug_fn=lambda image, steering: (np.fliplr(image), steering * -1))
 
-shadow_gen = lambda samples_to_shadow: generator(
+brightness_gen = lambda samples_to_shadow: generator(
     root_path, 
     samples_to_shadow, 
-    aug_image_fn=lambda x: augment_brightness_camera_images(x))
+    aug_fn=lambda image, steering: (augment_brightness_camera_images(image), steering))
 
-# combine generators 
-train_generator = chain(
-    train_generator, 
-    flip_gen(train_samples), 
-    shadow_gen(train_samples))
+translation_gen = lambda tr_gen: generator(
+    root_path, 
+    tr_gen, aug_fn=lambda image, steering: trans_image(image, steering, 100))
 
-validation_generator = chain(
-    validation_generator, 
-    flip_gen(validation_samples), 
-    shadow_gen(validation_samples))
+train_generators = []
+valid_generators = []
+
+# augmentation pipeline
+for samples in [train_center, train_left, train_right]:
+    train_generators.append(generator(root_path, samples))
+    train_generators.append(flip_gen(samples))
+    train_generators.append(brightness_gen(samples))
+    train_generators.append(translation_gen(samples))
+
+for samples in [valid_center, valid_left, valid_right]:
+    valid_generators.append(generator(root_path, samples))
+    valid_generators.append(flip_gen(samples))
+    valid_generators.append(brightness_gen(samples))
+    valid_generators.append(translation_gen(samples))
+
+# combine generators
+train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
+valid_generator = reduce(lambda prev, next: chain(prev, next), valid_generators) 
+
+# train_generator = chain(
+#     train_generator, 
+#     flip_gen(train_samples), 
+#     shadow_gen(train_samples))
+
+# validation_generator = chain(
+#     validation_generator, 
+#     flip_gen(validation_samples), 
+#     shadow_gen(validation_samples))
 
 # image normalization function
 normalize = lambda x: x / 255 - 0.5
@@ -78,12 +108,13 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-num_train_samples = len(train_samples) * 3 * 2
-num_valid_samples = len(validation_samples) * 3 * 2
+# TODO: need to recalculate this?
+num_train_samples = len(train_samples) * len(train_generators)
+num_valid_samples = len(validation_samples) * len(valid_generators) 
 
 history_object = model.fit_generator(
     train_generator, 
-    validation_data=validation_generator, 
+    validation_data=valid_generator, 
     samples_per_epoch=num_train_samples,
     nb_val_samples=num_valid_samples,
     nb_epoch=1)
