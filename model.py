@@ -1,4 +1,5 @@
 from keras.layers import Dense, Flatten, Lambda, Cropping2D
+from keras.layers.core import Dropout
 from keras.layers.convolutional import Convolution2D
 from keras.layers.pooling import MaxPooling2D
 from keras.models import Model, Sequential
@@ -13,24 +14,24 @@ from functools import reduce
 
 from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images, split_camera_angles, trans_image
 
-root_path = './data/bend_1'
+root_path = './data'
 
 train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
 
 # visual of augmentations
 sample_image = get_sample_image(root_path, train_samples) 
-plt.imshow(sample_image)
-plt.savefig('sample');
+#plt.imshow(sample_image)
+#plt.savefig('sample');
 
-plt.imshow(augment_brightness_camera_images(sample_image))
-plt.savefig('augmented');
+#plt.imshow(augment_brightness_camera_images(sample_image))
+#plt.savefig('augmented');
 
-plt.imshow(np.fliplr(sample_image))
-plt.savefig('flipped');
+#plt.imshow(np.fliplr(sample_image))
+#plt.savefig('flipped');
 
-sample_translated, steering = trans_image(sample_image, 0, 100)
-plt.imshow(sample_translated)
-plt.savefig('translated');
+#sample_translated, steering = trans_image(sample_image, 0, 100)
+#plt.imshow(sample_translated)
+#plt.savefig('translated');
 
 train_center, train_left, train_right = split_camera_angles(train_samples, 0.25)
 valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 0.25)
@@ -61,6 +62,8 @@ for samples in [train_center, train_left, train_right]:
     train_generators.append(generator(root_path, samples))
     train_generators.append(flip_gen(samples))
     train_generators.append(brightness_gen(samples))
+
+for samples in [train_left, train_right]:
     train_generators.append(translation_gen(samples))
 
 for samples in [valid_center, valid_left, valid_right]:
@@ -93,15 +96,23 @@ model.add(Lambda(normalize))
 model.add(Convolution2D(24, 5, 5, subsample=(2, 2),  activation='relu'))
 model.add(Convolution2D(36, 5, 5, subsample=(2, 2),  activation='relu'))
 model.add(Convolution2D(48, 5, 5, subsample=(2, 2),  activation='relu'))
+model.add(Dropout(0.5))
 
 model.add(Convolution2D(64, 3, 3, activation='relu'))
 model.add(Convolution2D(64, 3, 3, activation='relu'))
+model.add(Dropout(0.5))
 
 model.add(Flatten())
 
 model.add(Dense(100))
+model.add(Dropout(0.5))
+
 model.add(Dense(50))
+
+model.add(Dropout(0.5))
 model.add(Dense(10))
+
+model.add(Dropout(0.5))
 model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
@@ -118,7 +129,7 @@ history_object = model.fit_generator(
     validation_data=valid_generator, 
     samples_per_epoch=num_train_samples,
     nb_val_samples=num_valid_samples,
-    nb_epoch=1)
+    nb_epoch=10)
 
 ### print the keys contained in the history object
 print(history_object.history.keys())
