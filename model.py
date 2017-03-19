@@ -30,7 +30,7 @@ plt.savefig('flipped');
 
 sample_translated, steering = trans_image(sample_image, 0, 100)
 plt.imshow(sample_translated)
-plt.savefig('flipped');
+plt.savefig('translated');
 
 train_center, train_left, train_right = split_camera_angles(train_samples, 0.25)
 valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 0.25)
@@ -51,7 +51,7 @@ brightness_gen = lambda samples_to_shadow: generator(
 
 translation_gen = lambda tr_gen: generator(
     root_path, 
-    tr_gen, aug_fn=lambda image, steering: trans_image(image, steering, 100))
+    tr_gen, aug_fn=lambda image, steering: trans_image(image, steering, 150))
 
 train_generators = []
 valid_generators = []
@@ -66,8 +66,6 @@ for samples in [train_center, train_left, train_right]:
 for samples in [valid_center, valid_left, valid_right]:
     valid_generators.append(generator(root_path, samples))
     valid_generators.append(flip_gen(samples))
-    valid_generators.append(brightness_gen(samples))
-    valid_generators.append(translation_gen(samples))
 
 # combine generators
 train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
@@ -109,6 +107,9 @@ model.add(Dense(1))
 model.compile(loss='mse', optimizer='adam')
 
 # TODO: need to recalculate this?
+print('number of samples:' + str(len(train_samples)))
+print('number of generators' + str(len(train_generators)))
+
 num_train_samples = len(train_samples) * len(train_generators)
 num_valid_samples = len(validation_samples) * len(valid_generators) 
 
