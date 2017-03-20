@@ -14,7 +14,7 @@ from functools import reduce
 
 from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images, split_camera_angles, trans_image
 
-root_path = './data'
+root_path = './data/bend_1'
 
 train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
 
@@ -40,46 +40,39 @@ valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 
 # validation_generator = generator(root_path, validation_samples) 
 
 # generator funcs for each type of augmentation
-flip_gen = lambda samples_to_flip: generator(
-    root_path, 
-    samples_to_flip, 
-    aug_fn=lambda image, steering: (np.fliplr(image), steering * -1))
+# flip_gen = lambda samples_to_flip: generator(
+#     root_path, 
+#     samples_to_flip, 
+#     aug_fn=lambda image, steering: (np.fliplr(image), steering * -1))
 
 #brightness_gen = lambda samples_to_shadow: generator(
 #    root_path, 
 #    samples_to_shadow, 
 #    aug_fn=lambda image, steering: (augment_brightness_camera_images(image), steering))
 
-aug_gen = lambda tr_gen: generator(
-    root_path, 
-    tr_gen, aug_fn=lambda image, steering: trans_image(augment_brightness(image), steering, 150), rand_flip=True)
+# aug_gen = lambda tr_gen: generator(
+#     root_path, 
+#     tr_gen, aug_fn=lambda image, steering: trans_image(augment_brightness(image), steering, 150), rand_flip=True)
 
-train_generators = []
-valid_generators = []
+# train_generators = 
+# valid_generators = 
 
 # augmentation pipeline
-for samples in [train_center, train_left, train_right]:
-    train_generators.append(generator(root_path, samples))
-    train_generators.append(flip_gen(samples))
-    train_generators.append(aug_gen(samples))
+# for samples in [train_center, train_left, train_right]:
+#     train_generators.append(generator(root_path, samples))
+#     train_generators.append(flip_gen(samples))
+#     train_generators.append(aug_gen(samples))
 
-for samples in [valid_center, valid_left, valid_right]:
-    valid_generators.append(generator(root_path, samples))
-    valid_generators.append(flip_gen(samples))
+# for samples in [valid_center, valid_left, valid_right]:
+#     valid_generators.append(generator(root_path, samples))
+#     valid_generators.append(flip_gen(samples))
 
 # combine generators
-train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
-valid_generator = reduce(lambda prev, next: chain(prev, next), valid_generators) 
+# train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
+# valid_generator = reduce(lambda prev, next: chain(prev, next), valid_generators) 
 
-# train_generator = chain(
-#     train_generator, 
-#     flip_gen(train_samples), 
-#     shadow_gen(train_samples))
-
-# validation_generator = chain(
-#     validation_generator, 
-#     flip_gen(validation_samples), 
-#     shadow_gen(validation_samples))
+train_generator = generator(root_path, train_center + train_left + train_right)
+valid_generator = generator(root_path, valid_center + valid_left + valid_right)
 
 # image normalization function
 normalize = lambda x: x / 255 - 0.5
@@ -114,19 +107,15 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-# TODO: need to recalculate this?
-print('number of samples:' + str(len(train_samples)))
-print('number of generators' + str(len(train_generators)))
-
-num_train_samples = len(train_samples) * len(train_generators)
-num_valid_samples = len(validation_samples) * len(valid_generators) 
+num_train_samples = len(train_samples) * 3 * 2
+num_valid_samples = len(validation_samples) * 3 * 2
 
 history_object = model.fit_generator(
     train_generator, 
     validation_data=valid_generator, 
     samples_per_epoch=num_train_samples,
     nb_val_samples=num_valid_samples,
-    nb_epoch=10)
+    nb_epoch=1)
 
 ### print the keys contained in the history object
 print(history_object.history.keys())

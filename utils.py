@@ -13,6 +13,11 @@ def flip_randomly(image, steer):
     else:
         return image, steer
 
+def flip(image, steer):
+    flipped_image = cv2.flip(image,1)
+    flipped_steer = -steer
+    return flipped_image, flipped_steer
+
 def get_samples(path):
     """get samples from a csv file"""
     csv_path = path + '/driving_log.csv'
@@ -68,7 +73,7 @@ def get_image_steering(root_path):
     return images, measurements
 
 # the generator will also use the left and right camera images and apply a steering factor
-def generator(root_path, samples, batch_size=32, aug_fn=lambda image, steering: (image, steering), rand_flip=False):
+def generator(root_path, samples, batch_size=32):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
         sklearn.utils.shuffle(samples)
@@ -84,28 +89,89 @@ def generator(root_path, samples, batch_size=32, aug_fn=lambda image, steering: 
                 image = cv2.imread(filename_by_col(0))
                 angle = float(batch_sample[1])
                 
-                # steering factor applied to side cameras 
-                # steering_correction = 0.25
+                # aug_image, aug_angle = aug_fn(image, angle)
+                # if rand_flip:
+                #     aug_image, aug_angle = flip_randomly(aug_image, aug_angle)
 
-                # left_image = cv2.imread(filename_by_col(1))
-                # left_angle = float(batch_sample[3]) + steering_correction
-                
-                # right_image = cv2.imread(filename_by_col(2))
-                # right_angle = float(batch_sample[3]) - steering_correction
+                images.append(image)
+                angles.append(angle)
 
-                # for image, angle in zip([center_image, left_image, right_image], [center_angle, left_angle, right_angle]):
-                aug_image, aug_angle = aug_fn(image, angle)
-                if rand_flip:
-                    aug_image, aug_angle = flip_randomly(aug_image, aug_angle)
-
-                images.append(aug_image)
-                angles.append(aug_angle)
-
+                flipped_image, flipped_angle = flip(image, angle)
+                images.append(flipped_image)
+                angles.append(flipped_angle)
+            
             X_train = np.array(images)
             y_train = np.array(angles)
 
             yield sklearn.utils.shuffle(X_train, y_train)
 
+# the generator will also use the left and right camera images and apply a steering factor
+def generator_rand(root_path, samples, batch_size=32, aug_fn=lambda image, steering: (image, steering), rand_flip=False):
+    num_samples = len(samples)
+
+    while 1: # Loop forever so the generator never terminates
+        sklearn.utils.shuffle(samples)
+        for offset in range(0, num_samples, batch_size):
+            batch_samples = samples[offset:offset+batch_size]
+
+            batch_images = np.zeros((batch_size, new_size_row, new_size_col, 3))
+            batch_steering = np.zeros(batch_size)
+
+            for i_batch in range(batch_size):
+
+                i_line = np.random.randint(len(samples))
+                sample = samples[i_line]
+
+                filename_by_col = lambda col: root_path + '/IMG/' + sample[col].split('/')[-1]
+                image = cv2.imread(filename_by_col(0))
+                angle = float(batch_sample[1])
+            
+                #x,y = preprocess_image_file_train(line_data)
+                while keep_pr == 0:
+                    x,y = aug_fn(image, angle)
+
+                    if rand_flip:
+                        x, y = flip_randomly(x, y)
+
+                    if abs(y)<.1:
+                        pr_val = np.random.uniform()
+                        if pr_val>pr_threshold:
+                            keep_pr = 1
+                    else:
+                        keep_pr = 1
+            
+                batch_images[i_batch] = x
+                batch_steering[i_batch] = y
+            yield batch_images, batch_steering
+
+# def generate_train(data,batch_size = 32):
+    
+#     batch_images = np.zeros((batch_size, new_size_row, new_size_col, 3))
+#     batch_steering = np.zeros(batch_size)
+#     while 1:
+#         for i_batch in range(batch_size):
+#             i_line = np.random.randint(len(data))
+#             line_data = data.iloc[[i_line]].reset_index()
+            
+#             keep_pr = 0
+#             x = None
+#             y = None
+#             #x,y = preprocess_image_file_train(line_data)
+#             while keep_pr == 0:
+#                 x,y = preprocess_image_file_train(line_data)
+#                 pr_unif = np.random
+#                 if abs(y)<.1:
+#                     pr_val = np.random.uniform()
+#                     if pr_val>pr_threshold:
+#                         keep_pr = 1
+#                 else:
+#                     keep_pr = 1
+            
+#             #x = x.reshape(1, x.shape[0], x.shape[1], x.shape[2])
+#             #y = np.array([[y]])
+#             batch_images[i_batch] = x
+#             batch_steering[i_batch] = y
+#         yield batch_images, batch_steering
 
 # courtesy of: 
 # https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.bi5td84fk
