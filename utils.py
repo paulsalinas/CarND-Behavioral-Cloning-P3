@@ -73,7 +73,7 @@ def get_image_steering(root_path):
     return images, measurements
 
 # the generator will also use the left and right camera images and apply a steering factor
-def generator(root_path, samples, batch_size=32, aug=False):
+def generator(root_path, samples, batch_size=32, aug=False, num_aug=5):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
         sklearn.utils.shuffle(samples)
@@ -101,20 +101,21 @@ def generator(root_path, samples, batch_size=32, aug=False):
                 angles.append(flipped_angle)
 
                 if aug:
-                    x, y = None, None
-                    keep_pr = 0
-                    while keep_pr == 0:
-                        x, y = preprocess_aug(image, angle)
+                    for aug_i  in range(num_aug):
+                        x, y = None, None
+                        keep_pr = 0
+                        while keep_pr == 0:
+                            x, y = preprocess_aug(image, angle)
 
-                        if abs(y) < .1:
-                            pr_val = np.random.uniform()
-                            if pr_val >  1:
+                            if abs(y) < .1:
+                                pr_val = np.random.uniform()
+                                if pr_val >  1:
+                                    keep_pr = 1
+                            else:
                                 keep_pr = 1
-                        else:
-                            keep_pr = 1
-                    
-                    images.append(x)
-                    angles.append(y)
+                        
+                        images.append(x)
+                        angles.append(y)
             
             X_train = np.array(images)
             y_train = np.array(angles)

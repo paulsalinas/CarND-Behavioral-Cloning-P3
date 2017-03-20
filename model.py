@@ -71,7 +71,7 @@ valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 
 # train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
 # valid_generator = reduce(lambda prev, next: chain(prev, next), valid_generators) 
 
-train_generator = generator(root_path, train_center + train_left + train_right, aug=True)
+train_generator = generator(root_path, train_center + train_left + train_right, aug=True, num_aug=6)
 valid_generator = generator(root_path, valid_center + valid_left + valid_right)
 
 # image normalization function
@@ -107,8 +107,8 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-num_train_samples = len(train_samples) * 3 * 3
-num_valid_samples = len(validation_samples) * 3 * 3
+num_train_samples = len(train_samples) * 3 * 8
+num_valid_samples = len(validation_samples) * 3 * 8
 
 history_object = model.fit_generator(
     train_generator, 
