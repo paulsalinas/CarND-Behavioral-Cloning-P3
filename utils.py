@@ -4,6 +4,15 @@ import sklearn
 import numpy as np
 import matplotlib.image as mpimg
 
+def flip_randomly(image, steer):
+    ind_flip = np.random.randint(2)
+    if ind_flip==0:
+        flipped_image = cv2.flip(image,1)
+        flipped_steer = -steer
+        return flipped_image, flipped_steer
+    else:
+        return image, steer
+
 def get_samples(path):
     """get samples from a csv file"""
     csv_path = path + '/driving_log.csv'
@@ -59,7 +68,7 @@ def get_image_steering(root_path):
     return images, measurements
 
 # the generator will also use the left and right camera images and apply a steering factor
-def generator(root_path, samples, batch_size=32, aug_fn=lambda image, steering: (image, steering)):
+def generator(root_path, samples, batch_size=32, aug_fn=lambda image, steering: (image, steering), rand_flip=False):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
         sklearn.utils.shuffle(samples)
@@ -86,6 +95,9 @@ def generator(root_path, samples, batch_size=32, aug_fn=lambda image, steering: 
 
                 # for image, angle in zip([center_image, left_image, right_image], [center_angle, left_angle, right_angle]):
                 aug_image, aug_angle = aug_fn(image, angle)
+                if rand_flip:
+                    aug_image, aug_angle = flip_randomly(aug_image, aug_angle)
+
                 images.append(aug_image)
                 angles.append(aug_angle)
 

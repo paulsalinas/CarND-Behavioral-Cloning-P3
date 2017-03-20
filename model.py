@@ -52,7 +52,7 @@ flip_gen = lambda samples_to_flip: generator(
 
 aug_gen = lambda tr_gen: generator(
     root_path, 
-    tr_gen, aug_fn=lambda image, steering: trans_image(augment_brightness(image), steering, 150))
+    tr_gen, aug_fn=lambda image, steering: trans_image(augment_brightness(image), steering, 150), rand_flip=True)
 
 train_generators = []
 valid_generators = []
@@ -62,7 +62,6 @@ for samples in [train_center, train_left, train_right]:
     train_generators.append(generator(root_path, samples))
     train_generators.append(flip_gen(samples))
     train_generators.append(aug_gen(samples))
-
 
 for samples in [valid_center, valid_left, valid_right]:
     valid_generators.append(generator(root_path, samples))
@@ -127,7 +126,7 @@ history_object = model.fit_generator(
     validation_data=valid_generator, 
     samples_per_epoch=num_train_samples,
     nb_val_samples=num_valid_samples,
-    nb_epoch=5)
+    nb_epoch=10)
 
 ### print the keys contained in the history object
 print(history_object.history.keys())
