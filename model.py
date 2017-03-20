@@ -14,7 +14,7 @@ from functools import reduce
 
 from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images, split_camera_angles, trans_image
 
-root_path = './data/bend_1'
+root_path = './data'
 
 train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
 
@@ -71,7 +71,7 @@ valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 
 # train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
 # valid_generator = reduce(lambda prev, next: chain(prev, next), valid_generators) 
 
-train_generator = generator(root_path, train_center + train_left + train_right, aug=True, num_aug=6)
+train_generator = generator(root_path, train_center + train_left + train_right, aug=True, num_aug=3)
 valid_generator = generator(root_path, valid_center + valid_left + valid_right)
 
 # image normalization function
@@ -107,15 +107,16 @@ model.add(Dense(1))
 
 model.compile(loss='mse', optimizer='adam')
 
-num_train_samples = len(train_samples) * 3 * 8
-num_valid_samples = len(validation_samples) * 3 * 8
+num_train_samples = len(train_samples) * 3 * 5
+
+num_valid_samples = len(validation_samples) * 3 * 2
 
 history_object = model.fit_generator(
     train_generator, 
     validation_data=valid_generator, 
     samples_per_epoch=num_train_samples,
     nb_val_samples=num_valid_samples,
-    nb_epoch=1)
+    nb_epoch=5)
 
 ### print the keys contained in the history object
 print(history_object.history.keys())
