@@ -5,6 +5,9 @@ import numpy as np
 import matplotlib.image as mpimg
 
 def flip_randomly(image, steer):
+    """
+     will randomly flip an image and it's steering 
+    """
     ind_flip = np.random.randint(2)
     if ind_flip==0:
         flipped_image = cv2.flip(image,1)
@@ -33,7 +36,7 @@ def get_samples(path):
 
 def split_camera_angles(samples, angle_adjustment):
     """
-        get pairs of image names and measurements for center, left, and right cameras
+    get pairs of image names and measurements for center, left, and right cameras
     """
     centre = []
     left = []
@@ -72,8 +75,10 @@ def get_image_steering(root_path):
 
     return images, measurements
 
-# the generator will also use the left and right camera images and apply a steering factor
 def generator(root_path, samples, batch_size=24, aug=False, num_aug=5):
+    """
+    generator that will flip the image and apply a certain number of augmentations based on 'num_aug'
+    """
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
         sklearn.utils.shuffle(samples)
@@ -89,10 +94,6 @@ def generator(root_path, samples, batch_size=24, aug=False, num_aug=5):
                 image = cv2.imread(filename_by_col(0))
                 angle = float(batch_sample[1])
                 
-                # aug_image, aug_angle = aug_fn(image, angle)
-                # if rand_flip:
-                #     aug_image, aug_angle = flip_randomly(aug_image, aug_angle)
-
                 images.append(image)
                 angles.append(angle)
 
@@ -104,16 +105,7 @@ def generator(root_path, samples, batch_size=24, aug=False, num_aug=5):
                     for aug_i  in range(num_aug):
                         x, y = None, None
                         keep_pr = 0
-#                        while keep_pr == 0:
                         x, y = preprocess_aug(image, angle)
-
-                        #    if abs(y) < .1:
-                        #        pr_val = np.random.uniform()
-                        #        if pr_val >  1:
-                        #            keep_pr = 1
-                        #    else:
-                        #        keep_pr = 1
-                        
                         images.append(x)
                         angles.append(y)
             
@@ -128,78 +120,12 @@ def preprocess_aug(image, steering):
     aug_image, aug_steering = trans_image(aug_image, aug_steering, 150)
     return aug_image, aug_steering
 
-# the generator will also use the left and right camera images and apply a steering factor
-def generator_rand(root_path, samples, batch_size=32, aug_fn=lambda image, steering: (image, steering), rand_flip=False):
-    num_samples = len(samples)
-
-    while 1: # Loop forever so the generator never terminates
-        sklearn.utils.shuffle(samples)
-        for offset in range(0, num_samples, batch_size):
-            batch_samples = samples[offset:offset+batch_size]
-
-            batch_images = np.zeros((batch_size, new_size_row, new_size_col, 3))
-            batch_steering = np.zeros(batch_size)
-
-            for i_batch in range(batch_size):
-
-                i_line = np.random.randint(len(samples))
-                sample = samples[i_line]
-
-                filename_by_col = lambda col: root_path + '/IMG/' + sample[col].split('/')[-1]
-                image = cv2.imread(filename_by_col(0))
-                angle = float(batch_sample[1])
-            
-                #x,y = preprocess_image_file_train(line_data)
-                while keep_pr == 0:
-                    x,y = aug_fn(image, angle)
-
-                    if rand_flip:
-                        x, y = flip_randomly(x, y)
-
-                    if abs(y)<.1:
-                        pr_val = np.random.uniform()
-                        if pr_val>pr_threshold:
-                            keep_pr = 1
-                    else:
-                        keep_pr = 1
-            
-                batch_images[i_batch] = x
-                batch_steering[i_batch] = y
-            yield batch_images, batch_steering
-
-# def generate_train(data,batch_size = 32):
-    
-#     batch_images = np.zeros((batch_size, new_size_row, new_size_col, 3))
-#     batch_steering = np.zeros(batch_size)
-#     while 1:
-#         for i_batch in range(batch_size):
-#             i_line = np.random.randint(len(data))
-#             line_data = data.iloc[[i_line]].reset_index()
-            
-#             keep_pr = 0
-#             x = None
-#             y = None
-#             #x,y = preprocess_image_file_train(line_data)
-#             while keep_pr == 0:
-#                 x,y = preprocess_image_file_train(line_data)
-#                 pr_unif = np.random
-#                 if abs(y)<.1:
-#                     pr_vl = np.random.uniform()
-#                     if pr_val>pr_threshold:
-#                         keep_pr = 1
-#                 else:
-#                     keep_pr = 1
-            
-#             #x = x.reshape(1, x.shape[0], x.shape[1], x.shape[2])
-#             #y = np.array([[y]])
-#             batch_images[i_batch] = x
-#             batch_steering[i_batch] = y
-#         yield batch_images, batch_steering
-
-# courtesy of: 
-# https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.bi5td84fk
-# adjust brightness 
 def augment_brightness_camera_images(image):
+    """
+    courtesy of: 
+    https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.bi5td84fk
+    adjust brightness 
+    """
     image1 = cv2.cvtColor(image, cv2.COLOR_RGB2HSV)
     image1 = np.array(image1, dtype = np.float64)
     random_bright = .5 + np.random.uniform()
@@ -210,10 +136,13 @@ def augment_brightness_camera_images(image):
     return image1
 
 
-# courtesy of: 
-# https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.bi5td84fk
-# translate image horizontally 
 def trans_image(image,steer,trans_range):
+    """
+    courtesy of: 
+    https://chatbotslife.com/using-augmentation-to-mimic-human-driving-496b569760a9#.bi5td84fk
+    translate image horizontally and vertically while applying a steering adjustment based on
+    the horizontal translation
+    """
     rows,cols,channels = image.shape
 
     # Translation

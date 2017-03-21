@@ -14,62 +14,28 @@ from functools import reduce
 
 from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images, split_camera_angles, trans_image
 
-root_path = './data'
+root_path = './data/bend_1'
 
 train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
 
 # visual of augmentations
-sample_image = get_sample_image(root_path, train_samples) 
-#plt.imshow(sample_image)
-#plt.savefig('sample');
+# sample_image = get_sample_image(root_path, train_samples) 
 
-#plt.imshow(augment_brightness_camera_images(sample_image))
-#plt.savefig('augmented');
+# plt.imshow(sample_image)
+# plt.savefig('sample')
 
-#plt.imshow(np.fliplr(sample_image))
-#plt.savefig('flipped');
+# plt.imshow(augment_brightness_camera_images(sample_image))
+# plt.savefig('augmented')
 
-#sample_translated, steering = trans_image(sample_image, 0, 100)
-#plt.imshow(sample_translated)
-#plt.savefig('translated');
+# plt.imshow(np.fliplr(sample_image))
+# plt.savefig('flipped')
+
+# sample_translated, steering = trans_image(sample_image, 0, 100)
+# plt.imshow(sample_translated)
+# plt.savefig('translated')
 
 train_center, train_left, train_right = split_camera_angles(train_samples, 0.25)
 valid_center, valid_left, valid_right = split_camera_angles(validation_samples, 0.25)
-
-# train_generator = generator(root_path, train_samples) 
-# validation_generator = generator(root_path, validation_samples) 
-
-# generator funcs for each type of augmentation
-# flip_gen = lambda samples_to_flip: generator(
-#     root_path, 
-#     samples_to_flip, 
-#     aug_fn=lambda image, steering: (np.fliplr(image), steering * -1))
-
-#brightness_gen = lambda samples_to_shadow: generator(
-#    root_path, 
-#    samples_to_shadow, 
-#    aug_fn=lambda image, steering: (augment_brightness_camera_images(image), steering))
-
-# aug_gen = lambda tr_gen: generator(
-#     root_path, 
-#     tr_gen, aug_fn=lambda image, steering: trans_image(augment_brightness(image), steering, 150), rand_flip=True)
-
-# train_generators = 
-# valid_generators = 
-
-# augmentation pipeline
-# for samples in [train_center, train_left, train_right]:
-#     train_generators.append(generator(root_path, samples))
-#     train_generators.append(flip_gen(samples))
-#     train_generators.append(aug_gen(samples))
-
-# for samples in [valid_center, valid_left, valid_right]:
-#     valid_generators.append(generator(root_path, samples))
-#     valid_generators.append(flip_gen(samples))
-
-# combine generators
-# train_generator = reduce(lambda prev, next: chain(prev, next), train_generators) 
-# valid_generator = reduce(lambda prev, next: chain(prev, next), valid_generators) 
 
 train_generator = generator(root_path, train_center + train_left + train_right, aug=True, num_aug=4)
 valid_generator = generator(root_path, valid_center + valid_left + valid_right)
@@ -117,9 +83,6 @@ history_object = model.fit_generator(
     samples_per_epoch=num_train_samples,
     nb_val_samples=num_valid_samples,
     nb_epoch=5)
-
-### print the keys contained in the history object
-print(history_object.history.keys())
 
 ### plot the training and validation loss for each epoch
 # plt.plot(history_object.history['loss'])
