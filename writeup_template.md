@@ -1,5 +1,5 @@
 
-**Behavioral Cloning Project**
+# Behavioral Cloning Project
 
 The goals / steps of this project are the following:
 * Use the simulator to collect data of good driving behavior
@@ -91,7 +91,7 @@ This pipeline was very successful the Nvidia trial which makes it a perfect cand
 
 #### 2. Attempts to reduce overfitting in the model
 
-As seen in the code snippet in the section above, I've placed dropout layers to prevent overfitting. I also used 20% of the sample data as validation data for the model (model.py line 19). 
+As seen in the code snippet in the section above, I've placed dropout layers to prevent overfitting. I also used 20% of the sample data as validation data for the model (model.py line 20). 
 #### 3. Model parameter tuning
 
 As shown again in the code snippet above, the architecture used the adam optimizer and thus the learning rate was not tuned manually.
@@ -120,7 +120,7 @@ The augmentation of data was the key to successfully finishing the course, and I
 
 #### 2. Final Model Architecture
 
-The final model architecture (model.py lines 52-79) was the Nvidia pipeline and was described in the code snippet above 
+The final model architecture (model.py lines 48-75) was the Nvidia pipeline and was described in the code snippet above 
 
 #### 3. Creation of the Training Set & Training Process
 
