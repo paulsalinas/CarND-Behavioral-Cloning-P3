@@ -73,7 +73,7 @@ def get_image_steering(root_path):
     return images, measurements
 
 # the generator will also use the left and right camera images and apply a steering factor
-def generator(root_path, samples, batch_size=12, aug=False, num_aug=5):
+def generator(root_path, samples, batch_size=24, aug=False, num_aug=5):
     num_samples = len(samples)
     while 1: # Loop forever so the generator never terminates
         sklearn.utils.shuffle(samples)
@@ -218,7 +218,7 @@ def trans_image(image,steer,trans_range):
 
     # Translation
     tr_x = trans_range * np.random.uniform() - trans_range / 2
-    steer_ang = steer + tr_x  / trans_range * 2 * .6
+    steer_ang = steer + tr_x  / trans_range * 2 * .8
     tr_y = 40 * np.random.uniform() - 40 / 2
     
     #tr_y = 0
