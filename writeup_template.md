@@ -1,10 +1,3 @@
-#**Behavioral Cloning** 
-
-##Writeup Template
-
-###You can use this file as a template for your writeup if you want to submit it as a markdown file, but feel free to use some other method and submit a pdf if you prefer.
-
----
 
 **Behavioral Cloning Project**
 
@@ -29,33 +22,33 @@ The goals / steps of this project are the following:
 
 
 ## Rubric Points
-###Here I will consider the [rubric points](https://review.udacity.com/#!/rubrics/432/view) individually and describe how I addressed each point in my implementation.  
 
 ---
-###Files Submitted & Code Quality
+### Files Submitted & Code Quality
 
-####1. Submission includes all required files and can be used to run the simulator in autonomous mode
+#### 1. Submission includes all required files and can be used to run the simulator in autonomous mode
 
 My project includes the following files:
 * model.py containing the script to create and train the model
 * utils.py containing the generator used for keras generator and some utility functions that helped with processing the csv file and image augmentation
+* run1.mp4 video of the successful run 
 * drive.py for driving the car in autonomous mode
 * model.h5 containing a trained convolution neural network 
-* writeup_report.md or writeup_report.pdf (the file you just opened!) summarizing the results 
+* writeup_report.md (the file you just opened!) summarizing the results 
 
-####2. Submission includes functional code
+#### 2. Submission includes functional code
 Using the Udacity provided simulator and my drive.py file, the car can be driven autonomously around the track by executing 
 ```sh
 python drive.py model.h5
 ```
 
-####3. Submission code is usable and readable
+#### 3. Submission code is usable and readable
 
 The model.py and utils.py file contains the code for training and saving the convolution neural network. The model.py shows the pipeline I used for training and validating the model, and it contains comments to explain how the code works. The utils.py contains the generator and a bunch of utility functions that help with csv processing and image processing.
 
-###Model Architecture and Training Strategy
+### Model Architecture and Training Strategy
 
-####1. An appropriate model architecture has been employed
+#### 1. An appropriate model architecture has been employed
 
 My model architecture was the Nvidia pipeline with some dropout layers in between. Keras code is very clean and clearly indicates the layers in the architecture:
 
@@ -96,20 +89,20 @@ I used dropout layers inbetween to prevent overfitting and I used a RELU activat
 
 This pipeline was very successful the Nvidia trial which makes it a perfect candidate for this problem. For this problem, the network might be a bit excessive and it might be a good exercise to see how 'successful' this model would be with a few layers removed.
 
-####2. Attempts to reduce overfitting in the model
+#### 2. Attempts to reduce overfitting in the model
 
 As seen in the code snippet in the section above, I've placed dropout layers to prevent overfitting. I also used 20% of the sample data as validation data for the model (model.py line 19). 
-####3. Model parameter tuning
+#### 3. Model parameter tuning
 
 As shown again in the code snippet above, the architecture used the adam optimizer and thus the learning rate was not tuned manually.
 
-####4. Appropriate training data
+#### 4. Appropriate training data
 
 For this, I used the Udacity sample data and made sure to use all available camera images in addition to a set of augmentations that will be described below.
 
-###Model Architecture and Training Strategy
+### Model Architecture and Training Strategy
 
-####1. Solution Design Approach
+#### 1. Solution Design Approach
 
 I tried to continually incrementally improve the architecture and data given the training loss vs. validation loss and also the driving performance.
 
@@ -125,11 +118,11 @@ I knew data augmentation was the next step, especially with dealing with the tig
 
 The augmentation of data was the key to successfully finishing the course, and I will describe that in further detail below. The augmented data allowed my model to finish track 1.
 
-####2. Final Model Architecture
+#### 2. Final Model Architecture
 
 The final model architecture (model.py lines 52-79) was the Nvidia pipeline and was described in the code snippet above 
 
-####3. Creation of the Training Set & Training Process
+#### 3. Creation of the Training Set & Training Process
 
 As I mentioned above, I used all camera angles with a factor applied to right and left camera angles.
 
