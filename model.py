@@ -14,6 +14,7 @@ from functools import reduce
 
 from utils import generator, get_samples, get_sample_image, augment_brightness_camera_images, split_camera_angles, trans_image
 
+# change the path to point to loc of data
 root_path = './data/bend_1'
 
 train_samples, validation_samples = train_test_split(get_samples(root_path), test_size=0.2)
